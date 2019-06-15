@@ -8,11 +8,11 @@ import (
 )
 
 type Fq6 struct {
-	F          Fq2
+	F          *Fq2
 	NonResidue [2]*fp.FieldElement
 }
 
-func NewFq6(f Fq2, nonResidue [2]*fp.FieldElement) Fq6 {
+func NewFq6(f *Fq2, nonResidue [2]*fp.FieldElement) Fq6 {
 	fq6 := Fq6{
 		f,
 		nonResidue,
@@ -24,7 +24,6 @@ func (fq6 Fq6) Zero() [3][2]*fp.FieldElement {
 	return [3][2]*fp.FieldElement{fq6.F.Zero(), fq6.F.Zero(), fq6.F.Zero()}
 }
 
-// caution: element is not in mont domain
 func (fq6 Fq6) One() [3][2]*fp.FieldElement {
 	return [3][2]*fp.FieldElement{fq6.F.One(), fq6.F.Zero(), fq6.F.Zero()}
 }
@@ -33,13 +32,12 @@ func (fq6 Fq6) Equal(a, b [3][2]*fp.FieldElement) bool {
 	return fq6.F.Equal(a[0], b[0]) && fq6.F.Equal(a[1], b[1]) && fq6.F.Equal(a[2], b[2])
 }
 
-// func (fq6 Fq6) Copy(a [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
-// 	return [3][2]*fp.FieldElement{
-// 		fq6.F.Copy(a[0]),
-// 		fq6.F.Copy(a[1]),
-// 		fq6.F.Copy(a[2]),
-// 	}
-// }
+func (fq6 Fq6) Copy(c, a [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
+	fq6.F.Copy(c[0], a[0])
+	fq6.F.Copy(c[1], a[1])
+	fq6.F.Copy(c[2], a[2])
+	return c
+}
 
 func (fq6 Fq6) Demont(a [3][2]*fp.FieldElement) {
 	fq6.F.Demont(a[0])
@@ -64,32 +62,27 @@ func (fq6 Fq6) mulByNonResidue(c, a [2]*fp.FieldElement) [2]*fp.FieldElement {
 }
 
 func (fq6 Fq6) Add(c, a, b [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
-	return [3][2]*fp.FieldElement{
-		fq6.F.Add(c[0], a[0], b[0]),
-		fq6.F.Add(c[1], a[1], b[1]),
-		fq6.F.Add(c[2], a[2], b[2]),
-	}
+	fq6.F.Add(c[0], a[0], b[0])
+	fq6.F.Add(c[1], a[1], b[1])
+	fq6.F.Add(c[2], a[2], b[2])
+	return c
 }
 
 func (fq6 Fq6) Double(c, a [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
 	return fq6.Add(c, a, a)
 }
 
-// Sub performs a subtraction on the Fq6
 func (fq6 Fq6) Sub(c, a, b [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
-	return [3][2]*fp.FieldElement{
-		fq6.F.Sub(c[0], a[0], b[0]),
-		fq6.F.Sub(c[1], a[1], b[1]),
-		fq6.F.Sub(c[2], a[2], b[2]),
-	}
+	fq6.F.Sub(c[0], a[0], b[0])
+	fq6.F.Sub(c[1], a[1], b[1])
+	fq6.F.Sub(c[2], a[2], b[2])
+	return c
 }
 
-// Neg performs a negation on the Fq6
 func (fq6 Fq6) Neg(c, a [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
 	return fq6.Sub(c, fq6.Zero(), a)
 }
 
-// Mul performs a multiplication on the Fq6
 func (fq6 Fq6) Mul(c, a, b [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
 	v0 := fq6.F.NewElement()
 	v1 := fq6.F.NewElement()
@@ -101,7 +94,7 @@ func (fq6 Fq6) Mul(c, a, b [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
 	fq6.F.Mul(v0, a[0], b[0])
 	fq6.F.Mul(v1, a[1], b[1])
 	fq6.F.Mul(v2, a[2], b[2])
-	// c0
+	//
 	fq6.F.Add(v3, a[1], a[2])
 	fq6.F.Add(v4, b[1], b[2])
 	fq6.F.Mul(v3, v3, v4)
@@ -109,7 +102,7 @@ func (fq6 Fq6) Mul(c, a, b [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
 	fq6.F.Sub(v3, v3, v4)
 	fq6.mulByNonResidue(v3, v3)
 	fq6.F.Add(v5, v0, v3)
-	// c1
+	//
 	fq6.F.Add(v3, a[0], a[1])
 	fq6.F.Add(v4, b[0], b[1])
 	fq6.F.Mul(v3, v3, v4)
@@ -117,7 +110,7 @@ func (fq6 Fq6) Mul(c, a, b [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
 	fq6.F.Sub(v3, v3, v4)
 	fq6.mulByNonResidue(v4, v2)
 	fq6.F.Add(c[1], v3, v4)
-	// c2
+	//
 	fq6.F.Add(v3, a[0], a[2])
 	fq6.F.Add(v4, b[0], b[2])
 	fq6.F.Mul(v3, v3, v4)
@@ -182,16 +175,16 @@ func (fq6 Fq6) Inverse(c, a [3][2]*fp.FieldElement) [3][2]*fp.FieldElement {
 	t2 := fq6.F.NewElement()
 	t3 := fq6.F.NewElement()
 	t4 := fq6.F.NewElement()
-	// ok t0
+	//
 	fq6.F.Square(t0, a[0])
 	fq6.F.Mul(t1, a[1], a[2])
 	fq6.mulByNonResidue(t1, t1)
 	fq6.F.Sub(t0, t0, t1)
-	// ok t1
+	//
 	fq6.F.Square(t1, a[1])
 	fq6.F.Mul(t2, a[0], a[2])
 	fq6.F.Sub(t1, t1, t2)
-	// ok t2
+	//
 	fq6.F.Square(t2, a[2])
 	fq6.mulByNonResidue(t2, t2)
 	fq6.F.Mul(t3, a[0], a[1])
