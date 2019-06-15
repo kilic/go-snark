@@ -121,12 +121,12 @@ func BigIsOdd(n *big.Int) bool {
 }
 
 type Fq2Old struct {
-	F          FqOld
+	F          *FqOld
 	NonResidue *big.Int
 }
 
 // NewFq2Old generates a new Fq2Old
-func NewFq2Old(f FqOld, nonResidue *big.Int) *Fq2Old {
+func NewFq2Old(f *FqOld, nonResidue *big.Int) *Fq2Old {
 	return &Fq2Old{
 		f,
 		nonResidue,

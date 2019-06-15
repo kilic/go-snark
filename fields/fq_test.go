@@ -33,6 +33,8 @@ func TestMain(m *testing.M) {
 		nonResidueFq6,
 	}
 	fq1old = NewFqOld(p)
+	nonResidueFq2Big, _ := new(big.Int).SetString(testnonresiduefq2[2:], 16)
+	fq2old = NewFq2Old(fq1old, nonResidueFq2Big)
 	m.Run()
 }
 
