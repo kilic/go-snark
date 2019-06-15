@@ -1,6 +1,7 @@
 package fields
 
 import (
+	"io"
 	"math/big"
 
 	fp "github.com/kilic/fp256"
@@ -23,9 +24,8 @@ func (fq2 Fq2) Zero() [2]*fp.FieldElement {
 	return [2]*fp.FieldElement{fq2.F.NewElementFromUint(0), fq2.F.NewElementFromUint(0)}
 }
 
-// caution: element is not in mont domain
 func (fq2 Fq2) One() [2]*fp.FieldElement {
-	return [2]*fp.FieldElement{fq2.F.NewElementFromUint(1), fq2.F.NewElementFromUint(1)}
+	return [2]*fp.FieldElement{fq2.F.NewElementFromUint(1), fq2.F.NewElementFromUint(0)}
 }
 
 func (fq2 Fq2) IsZero(a [2]*fp.FieldElement) bool {
@@ -36,16 +36,16 @@ func (fq2 Fq2) Equal(a, b [2]*fp.FieldElement) bool {
 	return a[0].Eq(b[0]) && a[1].Eq(b[1])
 }
 
-func (fq2 Fq2) Copy(a [2]*fp.FieldElement) [2]*fp.FieldElement {
-	c := [2]*fp.FieldElement{new(fp.FieldElement), new(fp.FieldElement)}
+func (fq2 Fq2) Copy(c, a [2]*fp.FieldElement) [2]*fp.FieldElement {
 	c[0].Set(a[0])
 	c[1].Set(a[1])
 	return c
 }
 
-func (fq2 Fq2) Demont(a [2]*fp.FieldElement) {
+func (fq2 Fq2) Demont(a [2]*fp.FieldElement) [2]*fp.FieldElement {
 	fq2.F.Demont(a[0], a[0])
 	fq2.F.Demont(a[1], a[1])
+	return a
 }
 
 func (fq2 Fq2) NewElement() [2]*fp.FieldElement {
@@ -63,6 +63,12 @@ func (fq2 Fq2) NewElementFromString(s0, s1 string) ([2]*fp.FieldElement, error) 
 		return [2]*fp.FieldElement{}, err
 	}
 	return a, nil
+}
+
+func (fq2 Fq2) rand(a [2]*fp.FieldElement, r io.Reader) [2]*fp.FieldElement {
+	fq2.F.RandElement(a[0], r)
+	fq2.F.RandElement(a[1], r)
+	return a
 }
 
 func (fq2 Fq2) mulByNonResidue(c, a *fp.FieldElement) *fp.FieldElement {
@@ -95,15 +101,16 @@ func (fq2 Fq2) Neg(c, a [2]*fp.FieldElement) [2]*fp.FieldElement {
 }
 
 func (fq2 Fq2) Mul(c, a, b [2]*fp.FieldElement) [2]*fp.FieldElement {
-	var t1, t2, t0 fp.FieldElement
+	var t1, t2, t0, t3 fp.FieldElement
 	fq2.F.Mul(&t1, a[0], b[0])
 	fq2.F.Mul(&t2, a[1], b[1])
 	fq2.F.Add(&t0, &t1, &t2)
 	fq2.mulByNonResidue(&t2, &t2)
-	fq2.F.Add(c[0], &t1, &t2)
-	fq2.F.Add(&t1, a[1], a[0])
-	fq2.F.Add(&t2, b[1], b[0])
+	fq2.F.Add(&t3, &t1, &t2)
+	fq2.F.Add(&t1, a[0], a[1])
+	fq2.F.Add(&t2, b[0], b[1])
 	fq2.F.Mul(&t1, &t1, &t2)
+	c[0].Set(&t3)
 	fq2.F.Sub(c[1], &t1, &t0)
 	return c
 }
@@ -126,17 +133,17 @@ func (fq2 Fq2) MulScalar(p [2]*fp.FieldElement, e *big.Int) [2]*fp.FieldElement 
 }
 
 func (fq2 Fq2) Square(c, a [2]*fp.FieldElement) [2]*fp.FieldElement {
-	var t0, t1, t2 fp.FieldElement
+	var t0, t1, t2, t3 fp.FieldElement
 	fq2.F.Mul(&t0, a[0], a[1])
-	fq2.F.Double(c[1], &t0)
+	fq2.F.Double(&t3, &t0)
 	fq2.mulByNonResidue(&t1, &t0)
 	fq2.F.Add(&t0, &t1, &t0)
 	fq2.mulByNonResidue(&t1, a[1])
 	fq2.F.Add(&t1, &t1, a[0])
 	fq2.F.Add(&t2, a[0], a[1])
 	fq2.F.Mul(&t2, &t1, &t2)
-	fq2.F.Sub(&t0, &t2, &t0)
-	c[0].Set(&t0)
+	fq2.F.Sub(c[0], &t2, &t0)
+	c[1].Set(&t3)
 	return c
 }
 
@@ -154,6 +161,7 @@ func (fq2 Fq2) Inverse(c, a [2]*fp.FieldElement) [2]*fp.FieldElement {
 }
 
 func (fq2 Fq2) Div(c, a, b [2]*fp.FieldElement) [2]*fp.FieldElement {
-	fq2.Inverse(c, b)
-	return fq2.Mul(c, c, a)
+	t0 := fq2.NewElement()
+	fq2.Inverse(t0, b)
+	return fq2.Mul(c, a, t0)
 }
