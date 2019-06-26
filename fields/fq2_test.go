@@ -3,6 +3,8 @@ package fields
 import (
 	"crypto/rand"
 	"testing"
+
+	fp "github.com/kilic/fp256"
 )
 
 func TestFq2AddAssoc(t *testing.T) {
@@ -228,4 +230,41 @@ func TestFq2DivDist(t *testing.T) {
 			return
 		}
 	}
+}
+
+func BenchmarkMultiplication(t *testing.B) {
+	a, b, c := fq2.NewElement(), fq2.NewElement(), fq2.NewElement()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		fq2.Mul(c, a, b)
+	}
+	_ = c
+}
+
+func BenchmarkSquaring(t *testing.B) {
+	a := [2]fp.FieldElement{fp.FieldElement{}, fp.FieldElement{}}
+	c := [2]fp.FieldElement{fp.FieldElement{}, fp.FieldElement{}}
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		fq2.Square2(c, a)
+	}
+	_ = c
+}
+
+func BenchmarkAddition(t *testing.B) {
+	a, b, c := fq2.NewElement(), fq2.NewElement(), fq2.NewElement()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		fq2.Add(c, a, b)
+	}
+	_ = c
+}
+
+func BenchmarkDoubling(t *testing.B) {
+	a, c := fq2.NewElement(), fq2.NewElement()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		fq2.Double(c, a)
+	}
+	_ = c
 }

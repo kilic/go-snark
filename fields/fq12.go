@@ -40,9 +40,9 @@ func (fq12 Fq12) Copy(c, a [2][3][2]*fp.FieldElement) [2][3][2]*fp.FieldElement 
 	return c
 }
 
-func (fq12 Fq12) Demont(a [2][3][2]*fp.FieldElement) {
-	fq12.F.Demont(a[0])
-	fq12.F.Demont(a[1])
+func (fq12 Fq12) Demont(c, a [2][3][2]*fp.FieldElement) {
+	fq12.F.Demont(c[0], a[0])
+	fq12.F.Demont(c[1], a[1])
 }
 
 func (fq12 Fq12) NewElement() [2][3][2]*fp.FieldElement {

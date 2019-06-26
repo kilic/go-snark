@@ -5,15 +5,13 @@ import (
 	"io"
 	"math/big"
 	"testing"
-
-	fp "github.com/kilic/fp256"
 )
 
 var g1 G1
+var g2 G2
 var g PointG1
-var nBox = 1000
+var nBox = 100
 
-// not secure
 func (g1 G1) randomPoint(r io.Reader) (PointG1, error) {
 
 	k := new(big.Int)
@@ -22,23 +20,9 @@ func (g1 G1) randomPoint(r io.Reader) (PointG1, error) {
 		return PointG1{}, err
 	}
 	p := g1.NewPoint()
-	g1.Copy(p, g1.G)
+	g1.Copy(p, g1.g)
 	g1.MulScalar(p, p, k)
 	return p, nil
-}
-
-func TestMain(m *testing.M) {
-	fieldorder := "0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47"
-	curveorder := "0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001"
-	p, _ := new(big.Int).SetString(fieldorder[2:], 16)
-	q, _ := new(big.Int).SetString(curveorder[2:], 16)
-	f := fp.NewField(p)
-	g = PointG1{
-		f.NewElementFromUint(1),
-		f.NewElementFromUint(2),
-		f.NewElementFromUint(1)}
-	g1 = NewG1(f, g, q)
-	m.Run()
 }
 
 func TestG1Point(t *testing.T) {
@@ -48,7 +32,7 @@ func TestG1Point(t *testing.T) {
 		a, _ := g1.randomPoint(rand.Reader)
 		bytes := make([]byte, 64)
 
-		err := g1.ToBytes(bytes, a)
+		_, err := g1.ToBytes(bytes, a)
 		if err != nil {
 			t.Errorf("")
 			return
@@ -69,7 +53,7 @@ func TestG1Point(t *testing.T) {
 
 func TestG1Generator(t *testing.T) {
 
-	if !g1.IsOnCurve(g1.G) {
+	if !g1.IsOnCurve(g1.g) {
 		t.Errorf("")
 		return
 	}
@@ -129,10 +113,10 @@ func TestG1Mul(t *testing.T) {
 		a, _ := rand.Int(rand.Reader, g1.Q)
 		b, _ := rand.Int(rand.Reader, g1.Q)
 		c, _ := rand.Int(rand.Reader, g1.Q)
-		g1.MulScalar(t0, g1.G, b)
+		g1.MulScalar(t0, g1.g, b)
 		g1.MulScalar(t0, t0, a)
 		c.Mul(a, b)
-		g1.MulScalar(t1, g1.G, c)
+		g1.MulScalar(t1, g1.g, c)
 		if !g1.Equal(t0, t1) || !g1.IsOnCurve(t1) || !g1.IsOnCurve(t0) {
 			t.Errorf("")
 			return
@@ -251,7 +235,7 @@ func TestG1Order(t *testing.T) {
 			return
 		}
 
-		g1.MulScalar(a, g1.G, g1.Q)
+		g1.MulScalar(a, g1.g, g1.Q)
 		if !g1.Equal(zero, a) || !g1.IsOnCurve(a) {
 			t.Errorf("")
 			return

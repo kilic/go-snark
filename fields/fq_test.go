@@ -13,12 +13,11 @@ var fq2 *Fq2
 var fq2old *Fq2Old
 var fq6 *Fq6
 var fq12 *Fq12
-var nBox int
+var nBox int = 1000
 
 func TestMain(m *testing.M) {
 	testmodulus := "0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47"
 	testnonresiduefq2 := "0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46"
-	nBox = 10000
 	p, _ := new(big.Int).SetString(testmodulus[2:], 16)
 	fq1 = fp.NewField(p)
 	nonResidueFq2, _ := fq1.NewElementFromString(testnonresiduefq2)
@@ -52,8 +51,8 @@ func Benchmark100MultiplicationFqOld(t *testing.B) {
 }
 
 func Benchmark100MultiplicationFq(t *testing.B) {
-	a, _ := new(fp.FieldElement).SetString(nil, "0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
-	b, _ := new(fp.FieldElement).SetString(nil, "0x1fffffffffffffffdddddddd8888888888888888000000119a9a9a9a8b8b8b8b")
+	a, _ := new(fp.FieldElement).SetString("0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
+	b, _ := new(fp.FieldElement).SetString("0x1fffffffffffffffdddddddd8888888888888888000000119a9a9a9a8b8b8b8b")
 	c := new(fp.FieldElement)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
@@ -80,8 +79,8 @@ func Benchmark100AdditionFqOld(t *testing.B) {
 }
 
 func Benchmark100AdditionFq(t *testing.B) {
-	a, _ := new(fp.FieldElement).SetString(nil, "0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
-	b, _ := new(fp.FieldElement).SetString(nil, "0x1fffffffffffffffdddddddd8888888888888888000000119a9a9a9a8b8b8b8b")
+	a, _ := new(fp.FieldElement).SetString("0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
+	b, _ := new(fp.FieldElement).SetString("0x1fffffffffffffffdddddddd8888888888888888000000119a9a9a9a8b8b8b8b")
 	c := new(fp.FieldElement)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
@@ -134,10 +133,10 @@ func Benchmark10MultiplicationFq2(t *testing.B) {
 	a := fq2.NewElement()
 	b := fq2.NewElement()
 	c := fq2.NewElement()
-	a[0].SetString(nil, "0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
-	a[1].SetString(nil, "0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
-	b[0].SetString(nil, "0x1fffffffffffffffdddddddd8888888888888888000000119a9a9a9a8b8b8b8b")
-	b[1].SetString(nil, "0x1fffffffffffffffdddddddd8888888888888888000000119a9a9a9a8b8b8b8b")
+	a[0].SetString("0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
+	a[1].SetString("0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
+	b[0].SetString("0x1fffffffffffffffdddddddd8888888888888888000000119a9a9a9a8b8b8b8b")
+	b[1].SetString("0x1fffffffffffffffdddddddd8888888888888888000000119a9a9a9a8b8b8b8b")
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		fq1.Mont(a[0], a[0])
@@ -147,7 +146,7 @@ func Benchmark10MultiplicationFq2(t *testing.B) {
 		for i := 0; i < 10; i++ {
 			fq2.Mul(c, a, b)
 		}
-		fq2.Demont(c)
+		fq2.Demont(c, c)
 	}
 }
 
@@ -166,8 +165,8 @@ func BenchmarkInversionq2Old(t *testing.B) {
 func BenchmarkInversionFq2(t *testing.B) {
 	a := fq2.NewElement()
 	c := fq2.NewElement()
-	a[0].SetString(nil, "0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
-	a[1].SetString(nil, "0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
+	a[0].SetString("0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
+	a[1].SetString("0x1aaaaaaaaaaaaaaa44aa44aa44aa44aa91919191ffffff0000119999ffaa01aa")
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		fq2.Inverse(c, a)
